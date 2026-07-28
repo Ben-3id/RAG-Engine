@@ -1,0 +1,22 @@
+services:
+  pgvector:
+    image: paradedb/paradedb:latest
+    container_name: pgvector
+    ports:
+      - "5400:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql
+
+    environment:
+       POSTGRES_PASSWORD: "5515"
+       POSTGRES_USER: AHMED
+       POSTGRES_DB: SecondMind
+    networks:
+      - backend
+
+    restart: always
+networks:
+  backend:
+
+volumes:
+  pgvector_data:
