@@ -5,6 +5,8 @@ from model import AssetModel , TopicModel , ChunkModel
 from routes.db_schema import ProcessRequest
 from model.enum import ResponseEnum
 from model.database.db_schema import Asset , Topic  , Chunk
+from camel_tools.disambig.mle import MLEDisambiguator
+from camel_tools.utils.dediac import dediac_ar
 import logging
 import os
 
@@ -63,6 +65,7 @@ async def process(topic_name:str , process_req:ProcessRequest, req:Request):
     batch_size = process_req.batch_size
 
     process_controller = ProcessController()
+    mle = MLEDisambiguator.pretrained(model_name='calima-msa-r13')
     asset_model = AssetModel(req.app.db_client)
     topic_model = TopicModel(req.app.db_client)
     chunk_model = ChunkModel(req.app.db_client)
@@ -83,14 +86,24 @@ async def process(topic_name:str , process_req:ProcessRequest, req:Request):
         full_path = os.path.join(path , asset.name)
         logger.error(f"{full_path}")
         file_chunks = process_controller.process_file_content(path= full_path ,chunk_size=chunk_size ,chunk_overlap= overlap_size)
-        chunks = [
-        Chunk(
-            asset_id = asset.asset_id,
-            topic_id = topic.topic_id,
-            text=chunk.page_content,
-            chunk_metadata=chunk.metadata,
-                            )
-                        for i , chunk in enumerate(file_chunks)
-                                                ]
+        chunks = []
+        for chunk in file_chunks:
+            sentence = chunk.page_content
+            words = sentence.split()
+            result = mle.disambiguate(words)
+            processed = ' '.join([dediac_ar(d.analyses[0].analysis['lex']) for d in result])
+            logger.error(f"camel --> {processed}")
+
+            chunks.append(
+
+            Chunk(
+                asset_id = asset.asset_id,
+                topic_id = topic.topic_id,
+                text = chunk.page_content,
+                chunk_metadata = chunk.metadata,
+                processed_text = processed
+                                )
+
+            )
         _ = await chunk_model.insert_many_chunks(chunks=chunks , batch_size= batch_size)
     return len(chunks)

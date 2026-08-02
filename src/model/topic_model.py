@@ -32,6 +32,7 @@ class TopicModel(BaseModel):
                 async with session.begin():
                     result = await session.execute(Select(Topic).where(Topic.topic_name == topic.topic_name))
                     topic = result.scalar_one()
+                await session.commit()
         else:
             topic = await self.create_topic(topic)
         return topic
@@ -63,6 +64,7 @@ class TopicModel(BaseModel):
             async with session.begin():
                 results = await session.execute(Select(Topic))
                 results = results.scalars().all()
+            await session.commit()
         return [{"topic_id": object.topic_id ,
                   "topic_name":object.topic_name ,
                     "topic_description":object.topic_description }
@@ -75,4 +77,5 @@ class TopicModel(BaseModel):
             async with session.begin():
                 results = await session.execute(Select(Topic).where(Topic.topic_name == topic_name))
                 results = bool(results.scalar_one_or_none())
+            await session.commit()
         return results

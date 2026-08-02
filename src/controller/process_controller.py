@@ -14,7 +14,7 @@ class ProcessController(BaseController):
 
     def get_loader(self , path:str):
         ext = DataController().get_extention(path= path)
-        lang = DataController().language_detect(path= path)
+        lang = DataController().language_detect(path= path , ext=ext)
         logger.error(f"lang -----> {lang} ")
         if ext == ProcessEnum.TXT.value and lang == ProcessEnum.AR.value:
             return TextLoader(file_path= path , encoding= 'utf-8')

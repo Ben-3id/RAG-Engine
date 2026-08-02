@@ -8,6 +8,7 @@ import hashlib
 from model import AssetModel
 from  langdetect import detect , DetectorFactory
 from pypdf import PdfReader
+from model.enum import ProcessEnum
 
 class DataController(BaseController):
     mb2byte = 1048576
@@ -69,9 +70,15 @@ class DataController(BaseController):
         file.seek(0)
         return hash_func.hexdigest()
 
-    def language_detect(self, path:str):
+    def language_detect(self, path:str , ext:str):
         DetectorFactory.seed = 0
-        sample = PdfReader(path).pages[0].extract_text() 
+        sample =None
+        if ext == ProcessEnum.PDF.value:
+            sample = PdfReader(path).pages[0].extract_text() 
+            
+        elif ext == ProcessEnum.TXT.value:
+            with open(path , 'r' ,encoding="utf-8" ,errors='ignore') as f :
+                sample = f.read(1000)
         language = detect(sample)
         return language
 

@@ -8,8 +8,11 @@ import logging
 import time
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from camel_tools.disambig.mle import MLEDisambiguator
+from arabicstopwords.arabicstopwords import is_stop
+from camel_tools.utils.dediac import dediac_ar
 
-
+mle = MLEDisambiguator.pretrained(model_name='calima-msa-r13')
 
 nlp_router = APIRouter(prefix="/api/nlp")
 logger = logging.getLogger("uvicorn")
@@ -80,17 +83,28 @@ async def semactic_search(topic_name:str , user_req:SearchRequeset , request:Req
 @nlp_router.get("/tssearch/{topic_name}")
 async def TSsearch(topic_name:str , user_req:SearchRequeset , request:Request):
 
-
-    chunk_model = ChunkModel(request.app.db_client)
-
     query = user_req.query
     limit = user_req.limit
+
+    start_process = time.perf_counter()
+    processed = mle.disambiguate(query.split())
+    processed_query = " ".join([dediac_ar(d.analyses[0].analysis['lex']) for d in processed])
+    filtered = " ".join([word for word in query.split() if not is_stop(processed_query)])
+
+    logger.error(f"time for process query {(time.perf_counter() - start_process) *1000:.2f} ms")
+
+    start_get_topic = time.perf_counter()
+    chunk_model = ChunkModel(request.app.db_client)
     topic_model = TopicModel(request.app.db_client)
     topic = await topic_model.get_topic_or_create(topic=topic_name)
-    results = await chunk_model.text_search_by_topic(topic_id = topic.topic_id , query=query , limit=limit)
+    logger.error(f"time for get topic obj {(time.perf_counter() - start_get_topic) *1000:.2f} ms")
+
+    start_search = time.perf_counter()
+    results = await chunk_model.text_search_by_topic(topic_id = topic.topic_id , query=filtered , limit=limit)
+    logger.error(f"time for search {(time.perf_counter() - start_search) *1000:.2f} ms")
 
     for result in results:
-        yield {"text":result[0]}
+        yield {"text":result['text']}
 
 
 @nlp_router.get("/hybrid_search/{topic_name}")
