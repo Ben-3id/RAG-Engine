@@ -227,3 +227,6 @@ src/assets
 .postman/
 postman/
 src/assets/.
+testing/
+src\stores\embeddings\providers\local\
+evalution/
