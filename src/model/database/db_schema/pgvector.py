@@ -10,6 +10,6 @@ class PGVector(Base_Model):
 
     chunk_id = mapped_column(UUID(as_uuid=True) , ForeignKey("chunks.chunk_id") , primary_key=True)
     
-    embedding = mapped_column(Vector(384) , nullable=False )
+    embedding = mapped_column(Vector(Base_Model.config.VECTOR_LENGTH) , nullable=False )
 
     chunk = relationship("Chunk" , back_populates="vector")

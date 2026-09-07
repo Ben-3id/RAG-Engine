@@ -8,7 +8,7 @@ class Topic(Base_Model):
     __tablename__="topics"
 
 
-    topic_id:Mapped[uuid.UUID] = mapped_column(primary_key=True , default=uuid.uuid7, unique=True , nullable=False)
+    topic_id:Mapped[uuid.UUID] = mapped_column(primary_key=True , default=uuid.uuid1, unique=True , nullable=False)
     topic_name:Mapped[str] = mapped_column( nullable=False , unique=True ,index=True)
     topic_description = mapped_column(String) 
 

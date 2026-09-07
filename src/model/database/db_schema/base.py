@@ -1,4 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
+from settings import get_settings
 
 class Base_Model(DeclarativeBase):
-    pass
+    config = get_settings()

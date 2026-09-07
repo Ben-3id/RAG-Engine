@@ -4,6 +4,10 @@ from model.database.db_schema import Chunk , PGVector
 import logging 
 import time
 from uuid import UUID
+from arabicstopwords.arabicstopwords import is_stop
+from camel_tools.disambig.mle import MLEDisambiguator
+from camel_tools.utils.dediac import dediac_ar
+
 logger = logging.getLogger("uvicorn")
 
 class NLPController(BaseController):
@@ -12,6 +16,7 @@ class NLPController(BaseController):
         self.embeddings_model = embeddings_model
         self.generate_model = generate_model
         self.vector_model = vector_model
+        self.stemmmer = MLEDisambiguator.pretrained(model_name='calima-msa-r13')
 
     async def index_into_vectordb(self , chunks:List[Tuple] , batch_size:int=1000):
         chunk_ids = []
@@ -49,8 +54,23 @@ class NLPController(BaseController):
         results = await self.vector_model.search_by_topic(topic_id= topic_id , query=query , limit= limit)
 
         end_search = time.perf_counter()
-        logger.error(f"search in vectordb time {(start_search - end_search) * 1000:.2f} ms")
+        logger.error(f"search in vectordb time {(end_search - start_search) * 1000:.2f} ms")
         
+        return results
+
+    async def lexical_search(self , topic_id:UUID , chunk_model:object ,  query:str , limit:int):
+
+        start_process = time.perf_counter()
+        processed = self.stemmmer.disambiguate(query.split())
+        processed_query = " ".join([dediac_ar(d.analyses[0].analysis['lex']) for d in processed])
+        filtered = " ".join([word for word in query.split() if not is_stop(processed_query)])
+
+        logger.error(f"time for process query {(time.perf_counter() - start_process) *1000:.2f} ms")
+
+        start_search = time.perf_counter()
+        results = await chunk_model.text_search_by_topic(topic_id = topic_id , query=filtered , limit=limit)
+        logger.error(f"time for search {(time.perf_counter() - start_search) *1000:.2f} ms")
+
         return results
 
     def rrf(self , results_lists:List[List] , K:int):

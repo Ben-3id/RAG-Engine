@@ -7,7 +7,7 @@ import uuid
 class Asset(Base_Model):
     __tablename__="assets"
 
-    asset_id:Mapped[uuid.UUID] = mapped_column(primary_key=True ,default=uuid.uuid7)
+    asset_id:Mapped[uuid.UUID] = mapped_column(primary_key=True ,default=uuid.uuid1)
     topic_id:Mapped[uuid.UUID] = mapped_column(ForeignKey("topics.topic_id" ,ondelete="CASCADE"))
     name:Mapped[str] = mapped_column(nullable=False)
     size:Mapped[int] = mapped_column()

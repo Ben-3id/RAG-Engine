@@ -13,7 +13,7 @@ logger = logging.getLogger("uvicorn")
 class ChunkModel(BaseModel):
     CUSTOM_STOP_WORDS = {"what", "where", "why", "how", "is", "and", "the"}
     def __init__(self, db_client):
-        super().__init__(db_client)
+        self.db_client = db_client
 
 
     async def add_chunk(self,chunk:Chunk ):
@@ -71,7 +71,9 @@ class ChunkModel(BaseModel):
             stmt = (
                 Select(Chunk.text  ,
                        Chunk.chunk_id )
-                            .where(search.match_all(Chunk.processed_text , query))
+                            .where(search.match_all(Chunk.processed_text , query) ,
+                                    Chunk.topic_id == topic_id
+                                    )
                             .limit(limit)
                             )
             result = await session.execute(stmt)
@@ -83,44 +85,6 @@ class ChunkModel(BaseModel):
         }
         for row in result.all()
     ]
-
-
-    # async def text_search_by_topic(self, topic_id: UUID, query: str, limit: int):
-    #     cleaned_raw = self.clean_query(query)
-        
-    #     async with self.db_client as session:
-    #         # 1. معالجة نص البحث بالـ Stemmers باستخدام text() الآمن مع bind parameters
-    #         processed_query_stmt = select(
-    #             text(
-    #                 # "COALESCE((:q)::pdb.simple('stemmer=english', 'stopwords_language=english'), '') || ' ' || "
-    #                 "COALESCE((:q)::pdb.simple('stemmer=arabic', 'stopwords_language=arabic'), '')"
-    #             )
-    #         ).params(q=cleaned_raw)
-            
-    #         query_res = await session.execute(processed_query_stmt)
-    #         processed_query = query_res.scalar() or cleaned_raw
-
-    #         # إذا كانت النتيجة فارغة (مثلاً رموز فقط)، نستخدم النص الأصلي
-    #         final_query = processed_query.strip() if processed_query.strip() else cleaned_raw
-    #         logger.error(f"query --> {final_query}")
-    #         # 2. تنفيذ استعلام البحث BM25
-    #         stmt = (
-    #             select(Chunk.text, Chunk.chunk_id)
-    #             .where(search.phrase( Chunk.text , final_query ))
-    #             .limit(limit)
-    #         )
-
-    #         result = await session.execute(stmt)
-    #         rows = result.all()
-    #     # 3. إرجاع النتائج
-    #     return [
-    #         {
-    #             "text": row[0],
-    #             "chunk_id": str(row[1])
-    #         }
-    #         for row in rows
-    #     ]
-
 
     def clean_query(self , query: str) -> str:
         words = query.split()

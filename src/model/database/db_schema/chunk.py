@@ -1,17 +1,15 @@
 from .base import Base_Model
 from sqlalchemy.orm import Mapped , mapped_column , relationship 
-from sqlalchemy.dialects.postgresql import JSONB , TSVECTOR
-from sqlalchemy import ForeignKey , String , func , DateTime , Integer  , Computed , text
+from sqlalchemy.dialects.postgresql import JSONB 
+from sqlalchemy import ForeignKey , func , DateTime
 import uuid
 from sqlalchemy import Index
 from paradedb.sqlalchemy import indexing 
-from paradedb.sqlalchemy import tokenizer
-
 
 class Chunk(Base_Model):
     __tablename__="chunks"
 
-    chunk_id:Mapped[uuid.UUID] = mapped_column(primary_key=True ,default=uuid.uuid7)
+    chunk_id:Mapped[uuid.UUID] = mapped_column(primary_key=True ,default=uuid.uuid1)
     asset_id:Mapped[uuid.UUID] = mapped_column(ForeignKey("assets.asset_id"))
     topic_id:Mapped[uuid.UUID] = mapped_column(ForeignKey("topics.topic_id") , nullable=False , index=True )
     

@@ -20,7 +20,8 @@ class settings(BaseSettings):
     EMBED_PROVIDER:str = None
     COHERE_EMBED_MODEL_ID:str = None
     COHERE_API:str =None
-    LOCAL_MODEL_PATH:str = None
+    LOCAL_MODELS_PATH:str = None
+    MODEL_ID:str = None
     
     LLM_PROVIDER:str = None
     GEMINI_API:str = None

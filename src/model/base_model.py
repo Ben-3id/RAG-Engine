@@ -1,4 +1,4 @@
-from settings import settings , get_settings
+from settings import  get_settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 class BaseModel:
