@@ -10,6 +10,7 @@ class settings(BaseSettings):
     POSTGRES_USERNAME:str = None
     POSTGRES_PASSWORD:str = None
     DB_NAME:str = None
+    DB_PORT:int = None
     FILE_SIZE:int = None
     FILE_TYPES:list = None
     LEN_UNIQUE_STR:int = None
@@ -29,7 +30,7 @@ class settings(BaseSettings):
     LLM_STREAM_MODE:bool = None
 
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8" ,extra="ignore")
+    model_config = SettingsConfigDict(env_file="src/.env", env_file_encoding="utf-8" ,extra="ignore")
 
 
 def get_settings() -> settings:
