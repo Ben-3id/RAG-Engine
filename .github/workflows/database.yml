@@ -12,6 +12,17 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v6
+      
+      - name: install python
+        uses: actions/setup-python@v7.0.0
+        with:  
+          python-version: "3.12.9"
+
+      - name: install dependencies
+        run: | 
+          python -m pip install --upgrade pip
+          pip install pytest
+
 
       - name: connection
         run: pytest ./testing/integration_testing/connection_testing.py
