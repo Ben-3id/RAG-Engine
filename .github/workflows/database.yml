@@ -1,1 +1,17 @@
+name: database
 
+on: 
+  push: 
+    branches:
+      - master 
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6.1.0
+
+      - name: connection
+        run: .\testing\integration_testing\connection_testing.py
