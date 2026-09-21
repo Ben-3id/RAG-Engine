@@ -24,4 +24,10 @@ jobs:
 
 
       - name: connection
+        env:
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         run: pytest ./testing/integration_testing/connection_testing.py
+
