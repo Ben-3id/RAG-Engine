@@ -16,7 +16,8 @@ class DataController(BaseController):
         super().__init__()
 
     def validate_file(self, file:UploadFile):
-        signals = {"Test_size" :ResponseEnum.FILE_SIZE_ACCEPTED.value,"Test_Type":ResponseEnum.SUPPORTED_TYPE.value}
+        signals = {"Test_size" :ResponseEnum.FILE_SIZE_ACCEPTED.value,
+                   "Test_Type":ResponseEnum.SUPPORTED_TYPE.value}
         valid = True
 
         if file.size > (self.settings.FILE_SIZE * DataController.mb2byte):
@@ -49,6 +50,9 @@ class DataController(BaseController):
         topic_path = os.path.join(self.asset_folder_path , topic_name)
         unique_name = self.generate_filename(file_name=file_name , len_str=len_str)
         full_path = os.path.join(topic_path , unique_name)
+
+        if not os.path.exists(self.asset_folder_path):
+            os.mkdir(self.asset_folder_path)
         
         if not os.path.exists(topic_path):
             os.mkdir(topic_path)

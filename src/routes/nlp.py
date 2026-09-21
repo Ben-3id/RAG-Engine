@@ -4,14 +4,7 @@ from fastapi import  APIRouter , Request
 from fastapi.responses import JSONResponse , StreamingResponse
 import json 
 from .db_schema import  SearchRequeset
-from ragas.embeddings import HuggingFaceEmbeddings
 from stores.embeddings.providers.baai import BAAI
-from ragas.llms import LiteLLMStructuredLLM , llm_factory
-import litellm
-from ragas import  aevaluate , EvaluationDataset
-from ragas.dataset_schema import SingleTurnSample
-from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness ,ContextPrecision
-# from ragas.metrics.collections import ContextPrecision
 import logging
 import time
 import dotenv

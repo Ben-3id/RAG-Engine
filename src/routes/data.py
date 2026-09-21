@@ -20,6 +20,8 @@ async def upload(topic_name:str , req:Request , file: UploadFile = File(...)):
     topic_model = TopicModel(req.app.db_client)
     asset_model = AssetModel(req.app.db_client)
 
+    logger.error(f"doc type --> {file.content_type}")
+
     valid , signals = data_controller.validate_file(file=file)
 
     if not valid: 
@@ -28,10 +30,11 @@ async def upload(topic_name:str , req:Request , file: UploadFile = File(...)):
     file_path , file_unique_name = data_controller.generate_unique_filepath(file_name=file.filename , topic_name=topic_name)
 
     filehash =  data_controller.get_hashfile(file.file)
-    exist = await asset_model.is_asset_accept(filehash)
+    # exist = await asset_model.is_asset_accept(filehash)
 
-    if exist: 
-        return JSONResponse(status_code= status.HTTP_400_BAD_REQUEST, content=ResponseEnum.FILE_IS_EXISTS.value)
+
+    # if exist: 
+    #     return JSONResponse(status_code= status.HTTP_400_BAD_REQUEST, content=ResponseEnum.FILE_IS_EXISTS.value)
     
 
     data_controller.save_file(file=file ,file_path=file_path)
@@ -43,7 +46,7 @@ async def upload(topic_name:str , req:Request , file: UploadFile = File(...)):
                   name= file_unique_name , 
                   size= file.size ,
                   type = file.content_type ,
-                  filehash= filehash)
+                  filehash= filehash )
     
     _ = await asset_model.add_asset(asset= asset)
 

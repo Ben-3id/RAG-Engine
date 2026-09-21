@@ -10,7 +10,7 @@ class Gemini(GenerateModel):
         self.system_instruction = system_instruction
         self.client = genai.Client(api_key=self.api)
 
-    def generate_text(self, prompt:str , previous_interaction_id:str):
+    def generate_text(self, prompt:str , previous_interaction_id:str = None):
         
         stream = self.client.interactions.create(
             input= prompt , 
@@ -20,8 +20,11 @@ class Gemini(GenerateModel):
             previous_interaction_id = previous_interaction_id  )
         
         if self.stream:
-            for even in stream:
-                if even.event_type == 'step.delta':
-                    yield even.delta.text
-
+            return self.streaming(stream)
         else:   return stream
+
+    def streaming(self , stream):
+        for even in stream:
+            if even.event_type == "step.delta":
+                if not even.delta.type == "thought_signature":
+                    yield even.delta.text 

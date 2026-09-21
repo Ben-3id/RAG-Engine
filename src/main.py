@@ -10,7 +10,7 @@ from routes import data_router , nlp_router
 
 async def StartSpain( app:FastAPI ):
     app.settings = get_settings()
-    url_connection = f"postgresql+asyncpg://{app.settings.POSTGRES_USERNAME}:{app.settings.POSTGRES_PASSWORD}@localhost:5400/{app.settings.DB_NAME}"
+    url_connection = f"postgresql+asyncpg://{app.settings.POSTGRES_USERNAME}:{app.settings.POSTGRES_PASSWORD}@pgvector:5432/{app.settings.DB_NAME}"
     app.engine = create_async_engine(url= url_connection)
     app.db_client = AsyncSession(bind=app.engine , expire_on_commit=False)
     chunk_session = AsyncSession(bind=app.engine , expire_on_commit=False)

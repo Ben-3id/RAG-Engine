@@ -72,7 +72,7 @@ class ChunkModel(BaseModel):
                 Select(Chunk.text  ,
                        Chunk.chunk_id )
                             .where(search.match_all(Chunk.processed_text , query) ,
-                                    Chunk.topic_id == topic_id
+                                    # Chunk.topic_id == topic_id
                                     )
                             .limit(limit)
                             )

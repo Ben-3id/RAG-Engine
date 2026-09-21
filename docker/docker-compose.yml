@@ -12,11 +12,20 @@ services:
        POSTGRES_USER: AHMED
        POSTGRES_DB: SecondMind
     networks:
-      - backend
+      - Backend
 
     restart: always
+  
+  rag:
+    image: rag:v10
+    container_name: rag_engine
+    ports:
+      - "8000:8000"
+    networks:
+      - Backend
+
 networks:
-  backend:
+  Backend:
 
 volumes:
   pgvector_data:
