@@ -6,8 +6,28 @@ on:
       - master 
 
 jobs:
-  test:
+  integration-test:
     runs-on: ubuntu-latest
+
+    service:
+      paradedb:
+        image: paradedb/paradedb:latest
+        container_name: database
+        ports:
+          - "5000:5432"
+        volumes: 
+          - pgvector_data:/var/lib/postgresql
+        
+        environment:
+        POSTGRES_PASSWORD: "5515"
+        POSTGRES_USER: AHMED
+        POSTGRES_DB: SecondMind
+        networks:
+          - Backend
+
+        restart: always
+
+
 
     steps:
       - name: checkout
@@ -23,7 +43,7 @@ jobs:
           pip install -r requirements.txt
 
 
-      - name: connection
+      - name: connection test
         env:
           POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}

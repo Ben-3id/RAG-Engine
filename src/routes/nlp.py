@@ -23,12 +23,10 @@ mle = MLEDisambiguator.pretrained(model_name='calima-msa-r13')
 nlp_router = APIRouter(prefix="/api/nlp")
 logger = logging.getLogger("uvicorn")
 
-@nlp_router.post("/index/{topic_name}")
-async def index(topic_name:str , request:Request):
+@nlp_router.post("/index/{topic_id}")
+async def index(topic_id:str , request:Request):
 
     chunk_model = request.app.chunk_model
-    topic_model = request.app.topic_model
-    topic = await topic_model.get_topic_or_create(topic=topic_name) 
 
     nlp_controller = request.app.nlp_ctrl
     last_chunk_id = None
@@ -36,7 +34,7 @@ async def index(topic_name:str , request:Request):
     while True:
 
         chunks = await chunk_model.get_topic_chunks(
-            topic_id=topic.topic_id ,
+            topic_id=topic_id ,
             last_chunk_id= last_chunk_id
             )
         
@@ -48,22 +46,13 @@ async def index(topic_name:str , request:Request):
     return True
 
 
-@nlp_router.get("/pgsearch/{topic_name}")
-async def semactic_search(topic_name:str , user_req:SearchRequeset , request:Request):
+@nlp_router.get("/pgsearch/{topic_id}")
+async def semactic_search(topic_id:str , user_req:SearchRequeset , request:Request):
 
     nlp_controller = request.app.nlp_ctrl
 
     query = [user_req.query]
     limit = user_req.limit
-
-    topic_model = request.app.topic_model
-
-    start_topic = time.perf_counter()
-
-    topic_id = await topic_model.get_topic_or_create(topic=topic_name)
-
-    end_topic = time.perf_counter()
-    logger.error(f"time get topic {(end_topic - start_topic) * 1000:.2f} ms")
 
     starrt_searchFunc = time.perf_counter()
 
@@ -77,8 +66,8 @@ async def semactic_search(topic_name:str , user_req:SearchRequeset , request:Req
                 "text":result['text']}
 
 
-@nlp_router.get("/tssearch/{topic_name}")
-async def TSsearch(topic_name:str , user_req:SearchRequeset , request:Request):
+@nlp_router.get("/tssearch/{topic_id}")
+async def TSsearch(topic_id:str , user_req:SearchRequeset , request:Request):
 
     start_req_info = time.perf_counter()
     query = user_req.query
@@ -91,9 +80,7 @@ async def TSsearch(topic_name:str , user_req:SearchRequeset , request:Request):
 
     start_get_topic = time.perf_counter()
     chunk_model = request.app.chunk_model
-    topic_model = request.app.topic_model
-    topic_id = await topic_model.get_topic_or_create(topic=topic_name)
-    logger.error(f"time for get topic obj {(time.perf_counter() - start_get_topic) *1000:.2f} ms")
+    logger.error(f"time for get models obj {(time.perf_counter() - start_get_topic) *1000:.2f} ms")
 
     start_search = time.perf_counter()
     results = await nlp_controller.lexical_search(topic_id = topic_id , chunk_model = chunk_model , query = query , limit=limit)
@@ -102,8 +89,8 @@ async def TSsearch(topic_name:str , user_req:SearchRequeset , request:Request):
     return results
 
 
-@nlp_router.get("/hybrid_search/{topic_name}")
-async def hybrid_search(topic_name:str , user_req:SearchRequeset , request:Request):
+@nlp_router.get("/hybrid_search/{topic_id}")
+async def hybrid_search(topic_id:str , user_req:SearchRequeset , request:Request):
     start_init = time.perf_counter()
 
     chunk_model = request.app.chunk_model
@@ -113,8 +100,7 @@ async def hybrid_search(topic_name:str , user_req:SearchRequeset , request:Reque
     query = user_req.query
     limit = user_req.limit
 
-    topic_model = request.app.topic_model
-    topic_id = await topic_model.get_topic_or_create(topic=topic_name)
+  
 
     end_init = time.perf_counter()
     logger.error(f" init setup time {(end_init - start_init) * 1000:.2f} ms")
@@ -147,19 +133,19 @@ async def hybrid_search(topic_name:str , user_req:SearchRequeset , request:Reque
     return final_results
 
 
-@nlp_router.post('/hnsw/{topic_name}')
-async def hnsw(topic_name , request:Request):
+@nlp_router.post('/hnsw/{topic_id}')
+async def hnsw(topic_id , request:Request):
     vector_model = PGVectorModel(request.app.db_client)
     return await vector_model.hnsw_index()
 
 
 
 
-@nlp_router.post('/chat/{topic_name}')
-async def chat(topic_name ,  user_req:SearchRequeset , request:Request):
+@nlp_router.post('/chat/{topic_id}')
+async def chat(topic_id ,  user_req:SearchRequeset , request:Request):
 
     Model = request.app.llm_client
-    chunks = await hybrid_search(topic_name= topic_name , user_req = user_req , request= request)
+    chunks = await hybrid_search(topic_id= topic_id , user_req = user_req , request= request)
     prompt = Get_prompt(chunks= chunks , question=user_req.query)
     result = Model.generate_text(prompt)
     return "".join(result)

@@ -67,15 +67,32 @@ class ChunkModel(BaseModel):
     async def text_search_by_topic(self , topic_id:UUID , query:str , limit:int):
 
         async with self.db_client as session:
+            ts_query = func.websearch_to_tsquery(
+                        "simple",
+                        query
+                    )
 
             stmt = (
-                Select(Chunk.text  ,
-                       Chunk.chunk_id )
-                            .where(search.match_all(Chunk.processed_text , query) ,
-                                    # Chunk.topic_id == topic_id
-                                    )
-                            .limit(limit)
-                            )
+                select(
+                    Chunk.text,
+                    Chunk.chunk_id,
+                    func.ts_rank_cd(
+                        Chunk.TSsearch,
+                        ts_query
+                    ).label("score")
+                )
+                .where(
+                    Chunk.TSsearch.op("@@")(ts_query) ,
+                    # Chunk.topic_id == topic_id 
+                )
+                .order_by(
+                    func.ts_rank_cd(
+                        Chunk.TSsearch,
+                        ts_query
+                    ).desc()
+                )
+                .limit(limit)
+            )
             result = await session.execute(stmt)
             await session.commit()
         return [

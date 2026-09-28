@@ -95,7 +95,6 @@ async def process(topic_name:str , process_req:ProcessRequest, req:Request):
             words = sentence.split()
             result = mle.disambiguate(words)
             processed = ' '.join([dediac_ar(d.analyses[0].analysis['lex']) for d in result])
-            logger.error(f"camel --> {processed}")
 
             chunks.append(
 

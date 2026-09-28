@@ -81,6 +81,10 @@ async def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={
+        "ssl": "require",
+        "statement_cache_size": 0,
+    },
     )
 
     async with connectable.connect() as connection:

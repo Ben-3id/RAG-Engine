@@ -1,7 +1,7 @@
 from .base import Base_Model
 from sqlalchemy.orm import Mapped , mapped_column , relationship 
-from sqlalchemy.dialects.postgresql import JSONB 
-from sqlalchemy import ForeignKey , func , DateTime
+from sqlalchemy.dialects.postgresql import JSONB , TSVECTOR 
+from sqlalchemy import ForeignKey , func , DateTime , Computed
 import uuid
 from sqlalchemy import Index
 from paradedb.sqlalchemy import indexing 
@@ -18,8 +18,17 @@ class Chunk(Base_Model):
     chunk_metadata:Mapped[dict] = mapped_column(JSONB  ,
                                                 nullable=False,
                                                 default=dict) 
+
     
     processed_text:Mapped[str] = mapped_column( nullable=False )
+
+    TSsearch:Mapped[str] = mapped_column(
+                                            TSVECTOR,
+                                            Computed(
+                                                "to_tsvector('simple', processed_text)",
+                                                persisted=True
+                                            ), )
+
 
     created_at = mapped_column(DateTime(timezone=True) , server_default=func.now() , nullable=False)
 
@@ -29,9 +38,7 @@ class Chunk(Base_Model):
                             cascade="all, delete-orphan" ,
                             uselist=False)
 
-Index( "idx_bm25_text_ar",
-        indexing.BM25Field(Chunk.chunk_id),
-        indexing.BM25Field(Chunk.processed_text),
-        postgresql_using="bm25" ,
-        postgresql_with={"key_field": "chunk_id"}
+Index( "idx_text_ar",
+        Chunk.TSsearch,
+        postgresql_using="gin" 
     )

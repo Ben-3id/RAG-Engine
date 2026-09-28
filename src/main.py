@@ -3,15 +3,33 @@ from stores.embeddings import EmbeddingFactory
 from stores.llm import GeneratorFactory
 from fastapi import FastAPI
 from settings import get_settings
+from sqlalchemy.pool import NullPool
 from contextlib import asynccontextmanager
 from model import ChunkModel , TopicModel ,PGVectorModel
-from controller import NLPController
+from controller import NLPController 
 from routes import data_router , nlp_router
 
 async def StartSpain( app:FastAPI ):
     app.settings = get_settings()
-    url_connection = f"postgresql+asyncpg://{app.settings.POSTGRES_USERNAME}:{app.settings.POSTGRES_PASSWORD}@pgvector:5432/{app.settings.DB_NAME}"
-    app.engine = create_async_engine(url= url_connection)
+
+    url_connection = (
+        f"postgresql+asyncpg://"
+        f"{app.settings.POSTGRES_USERNAME}:"
+        f"{app.settings.POSTGRES_PASSWORD}@"
+        f"{app.settings.POSTGRES_HOST}:"
+        f"{app.settings.DB_PORT}/"
+        f"{app.settings.DB_NAME}"
+    )
+
+
+    app.engine = create_async_engine(
+        url_connection,
+        connect_args={
+            "ssl": "require",
+            "statement_cache_size": 0,
+        },
+        pool_pre_ping=True,
+    )
     app.db_client = AsyncSession(bind=app.engine , expire_on_commit=False)
     chunk_session = AsyncSession(bind=app.engine , expire_on_commit=False)
     pgvector_session = AsyncSession(bind=app.engine , expire_on_commit=False)
@@ -31,6 +49,7 @@ async def StartSpain( app:FastAPI ):
         generate_model=app.llm_client,
         vector_model=app.pgvector_model
     )
+
     
 async def EndSpain( app: FastAPI ):
     await app.engine.dispose()
