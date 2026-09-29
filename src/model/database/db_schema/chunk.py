@@ -22,13 +22,6 @@ class Chunk(Base_Model):
     
     processed_text:Mapped[str] = mapped_column( nullable=False )
 
-    TSsearch:Mapped[str] = mapped_column(
-                                            TSVECTOR,
-                                            Computed(
-                                                "to_tsvector('simple', processed_text)",
-                                                persisted=True
-                                            ), )
-
 
     created_at = mapped_column(DateTime(timezone=True) , server_default=func.now() , nullable=False)
 
@@ -37,8 +30,3 @@ class Chunk(Base_Model):
                             back_populates="chunk" ,
                             cascade="all, delete-orphan" ,
                             uselist=False)
-
-Index( "idx_text_ar",
-        Chunk.TSsearch,
-        postgresql_using="gin" 
-    )

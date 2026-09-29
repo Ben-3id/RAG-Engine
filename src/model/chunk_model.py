@@ -46,7 +46,7 @@ class ChunkModel(BaseModel):
             stmt =( Select(
                 Chunk.chunk_id ,
                 Chunk.text ,
-                Chunk.chunk_id
+                Chunk.topic_id
                 )
                 .where(Chunk.topic_id == topic_id)
                 )
@@ -64,47 +64,52 @@ class ChunkModel(BaseModel):
             results = await session.execute(stmt)
         return results.all()
 
-    async def text_search_by_topic(self , topic_id:UUID , query:str , limit:int):
+    async def text_search_by_topic(self , topic_id:UUID , query:str , limit:int): #ai help
 
         async with self.db_client as session:
-            ts_query = func.websearch_to_tsquery(
-                        "simple",
-                        query
-                    )
+
+            score = func.similarity(
+                Chunk.processed_text,
+                query
+            )
 
             stmt = (
                 select(
                     Chunk.text,
                     Chunk.chunk_id,
-                    func.ts_rank_cd(
-                        Chunk.TSsearch,
-                        ts_query
-                    ).label("score")
+                    score.label("score")
                 )
                 .where(
-                    Chunk.TSsearch.op("@@")(ts_query) ,
-                    # Chunk.topic_id == topic_id 
+                    Chunk.processed_text.ilike(f"%{query}%"),
+                    # Chunk.topic_id == topic_id
                 )
                 .order_by(
-                    func.ts_rank_cd(
-                        Chunk.TSsearch,
-                        ts_query
-                    ).desc()
+                    score.desc()
                 )
                 .limit(limit)
             )
+
             result = await session.execute(stmt)
-            await session.commit()
+
         return [
-        {
-            "text": row[0],
-            "chunk_id":row[1]
-        }
-        for row in result.all()
-    ]
+            {
+                "text": row.text,
+                "chunk_id": row.chunk_id,
+                "score": row.score
+            }
+            for row in result
+        ]
+
+
 
     def clean_query(self , query: str) -> str:
         words = query.split()
-        filtered = [w for w in words if w.lower() not in ChunkModel.CUSTOM_STOP_WORDS]
+        filtered = [w for w in words if w.ؤlower() not in ChunkModel.CUSTOM_STOP_WORDS]
         return " ".join(filtered)
-            
+
+    def make_prefix_query(self , query:str):
+        splited_query = query.split()
+        return " & ".join(
+            f"{word}:*"
+            for word in splited_query
+        )

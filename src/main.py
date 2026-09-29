@@ -3,7 +3,6 @@ from stores.embeddings import EmbeddingFactory
 from stores.llm import GeneratorFactory
 from fastapi import FastAPI
 from settings import get_settings
-from sqlalchemy.pool import NullPool
 from contextlib import asynccontextmanager
 from model import ChunkModel , TopicModel ,PGVectorModel
 from controller import NLPController 

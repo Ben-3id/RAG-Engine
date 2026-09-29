@@ -2,6 +2,7 @@ from sqlalchemy.orm import Mapped , mapped_column , relationship
 from sqlalchemy import String  , DateTime , func
 from .base import Base_Model
 import uuid 
+from sqlalchemy import Index
 
 
 class Topic(Base_Model):
